@@ -179,6 +179,8 @@ public:
     friend ostream &operator<<(ostream &i, Priority_queue &c);
     void citire(istream &i, Priority_queue &c);
     void afisare(ostream &i, Priority_queue &c);
+    void pop();
+    void push(char litera, int p);
     Priority_queue& operator-(Priority_queue &c);
     Priority_queue& operator+(const Priority_queue & c);
 };
@@ -193,7 +195,7 @@ Nod::Nod(char i,   Nod *urm )
         next= urm;
 
     }
-    Nod::Nod(const Nod &n)
+Nod::Nod(const Nod &n)
     {
         info=n.info;
         next=n.next;
@@ -405,11 +407,11 @@ void Coada::citire(istream &i, Coada &c)
     for(int j=0; j<dim_max-2;j++)
     {
         this->prim= &n;
-        i>>n.next;
-        n=n.next;
+        i>>n.next; ///-------je ne comprends rien
+        n=*n.next;
     }
-    ultim=n;
-    delete(*n);
+    *ultim=n;
+    delete(&n);
 }
 
 ostream  &operator<<(ostream &i, Coada &c)
@@ -426,7 +428,7 @@ void Coada:: afisare(ostream &i, Coada &c)
     for(int j=0; j<dim_max;j++)
     {
         i<<n.next;
-        &n=n.next;
+        n=*n.next;
     }
 
 }
@@ -452,13 +454,13 @@ Coada& Coada::operator=(const Coada &c )
     this->dim_max=c.dim_max;
     this->prim-c.prim;
     this->ultim=c.ultim;
-    new Nod n=this->prim;
-    new Nod m=c.prim;
+     Nod n=*this->prim;
+     Nod m=*c.prim;
     for(int i=0; i<dim_max-1; i++)
     {
         n.next=m.next;
-        n=n.next;
-        m=m.next;
+        n=*n.next;
+        m=*m.next;
 
     }
 
@@ -468,7 +470,7 @@ Coada& Coada::operator=(const Coada &c )
 
 Coada& Coada::  operator-(Coada &c)
 {
-     Nod n=this->prim, m=c.prim;
+     Nod n=*this->prim, m=*c.prim;
     while(n==m)
     {
 
@@ -479,17 +481,17 @@ Coada& Coada::  operator-(Coada &c)
         delete(&n);
         delete(&m);
     }
-    return this;
+    return *this;
 
 }
 Coada& Coada :: operator+(const Coada & c)
 {
      Nod n=*c.prim;
-     Coada e=this;
-    while(n!=null)
+     Coada e=*this;
+    while(n!=NULL)
     {
-        e.push(n);
-        n=n.next;
+        e.push(n.info);
+        n=*n.next;
     }
     return e;
 }
@@ -513,15 +515,15 @@ void DEQUE:: pop(int opt)
     {
          Nod n=*this->prim;
         this->ultim=null;
-        for(int i=0; i<dim_max-1)
+        for(int i=0; i<dim_max-1;i++)
         {
-            n=n.next;
+            n=*get_next(n);
 
         }
-        n.next=null;
+        set_next(null,n);
         delete(this->ultim);
-        this->ultim=n;
-        delete(n);
+        this->ultim=&n;
+        delete(&n);
     }
     else Coada::pop();
 
@@ -531,10 +533,11 @@ void DEQUE ::push(int opt, char litera)
     ///0-stg, 1-dr
     if(opt==0)
     {
-        new Nod n=this->prim;
-        this->prim=new Nod m(litera, n);
-        delete(n);
-        delete(m);
+         Nod n=*this->prim;
+         Nod m(litera, &n);
+        this->prim=&m;
+        delete(&n);
+        delete(&m);
     }
     else
         Coada::push(litera);
@@ -542,20 +545,49 @@ void DEQUE ::push(int opt, char litera)
 DEQUE& DEQUE:: operator=(const DEQUE &d )
 {
 
-    this=d;
+    *this=d;
 
 
 }
 
-istream DEQUE ::&operator>>(istream &i, DEQUE &c)
+void DEQUE::citire(istream &i, DEQUE &c)
 {
-    i>>c;
+     Nod n;
+    i>>dim_max;
+    i>>n;
+    for(int j=0; j<dim_max-2;j++)
+    {
+        this->prim= &n;
+        i>>n.next;
+        n=*n.next;
+    }
+    *ultim=n;
+    delete(&n);
+}
+
+void DEQUE:: afisare(ostream &i, DEQUE &c)
+{
+
+    i<<dim_max;
+    i<<prim;
+    Nod n=*prim;
+    for(int j=0; j<dim_max;j++)
+    {
+        i<<n.next;
+        n=*n.next;
+    }
 
 }
-ostream DEQUE::&operator<<(ostream &i, DEQUE &c)
+
+istream &operator>>(istream &i, DEQUE &c) ///----------------------------
+{
+    c.citire(i, c);
+
+}
+ostream &operator<<(ostream &i, DEQUE &c)
 {
 
-    i<<c;
+    c.afisare(i,c);
 
 }
 
@@ -578,13 +610,13 @@ ostream DEQUE::&operator<<(ostream &i, DEQUE &c)
         n=&prim;
         for(i=1; i<sizeof(vect)-1; i++)
         {
-            n->get_next()=vect[i];
-            n=n->get_next();
+            *get_next(n)=vect[i];
+            n=*get_next(n);
 
 
         }
 
-        ultim=*vect[i];
+        ultim=&vect[i];
         dim_max=d;
 
     }
@@ -592,14 +624,14 @@ ostream DEQUE::&operator<<(ostream &i, DEQUE &c)
     {
 
          NodPrioritate n, m;
-        m=c.prim;
+        m=*c.prim;
         prim=c.prim;
         n=*prim;
-        while( m->get_next())
+        while( get_next(m))
             {
-                n->get_next()=m->get_next();
-                n=n.next;
-                m=m.next;
+                get_next(n)=get_next(m);
+                n=*get_next(n);
+                m=*get_next(m);
             }
 
 ///ultim=c.ultim;
@@ -637,7 +669,7 @@ void Priority_queue:: pop()
 
         }
     }
-    delete(n);
+    delete(&n);
 }
 void Priority_queue::  push(char litera, int p)
 {
@@ -647,16 +679,47 @@ void Priority_queue::  push(char litera, int p)
     delete(n);
 }
 
-istream Priority_queue::&operator>>(istream &i, Priority_queue &c)
+void Priority_queue::citire(istream &i, Priority_queue &c)
+{
+     NodPrioritate n;
+    i>>dim_max;
+    i>>n;
+    for(int j=0; j<dim_max-2;j++)
+    {
+        this->prim= &n;
+        i>>n.next;
+        n=*n.next;
+    }
+    *ultim=n;
+    delete(&n);
+}
+
+
+
+void Priority_queue:: afisare(ostream &i, Priority_queue &c)
 {
 
-    i>>c;
+    i<<dim_max;
+    i<<prim;
+    NodPrioritate n=*prim;
+    for(int j=0; j<dim_max;j++)
+    {
+        i<<n.next;
+        n=*n.next;
+    }
 
 }
-ostream Priority_queue::&operator<<(ostream &i, Priority_queue &c)
+
+istream &operator>>(istream &i, Priority_queue &c)
 {
 
-    i<<c;
+    c.citire(i, c);
+
+}
+ostream &operator<<(ostream &i, Priority_queue &c)
+{
+
+    c.afisare(i, c);
 
 }
 
@@ -664,7 +727,9 @@ ostream Priority_queue::&operator<<(ostream &i, Priority_queue &c)
 ///-----------------------------------------------------   MAIN
 
 int main()
-{ Coada[10] ;
+{
+
+    /**Coada[10] ;
 DEQUE[10];
 Priority_queue[10];
 int n=2;
@@ -712,4 +777,5 @@ for(int i=0;i<n;i++)
 }
 
     return 0;
+    */
 }
