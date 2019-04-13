@@ -51,37 +51,29 @@ de baza si destructor.
 #include <iostream>
 #include <fstream>
 #include <stddef.h>
+
+
 using namespace std;
+
+
 ifstream fin("date.in");
 ofstream fout("date.out");
 class Nod
 {
+protected:
+
     char info;
 
     Nod *next;
 public:
 
-    Nod(char i=0,   Nod *urm = NULL)
-    {
-        info=i;
-        next= urm;
-
-    }
-    Nod(const Nod &n)
-    {
-        info=n.info;
-        next=n.next;
-    }
-
-    ~Nod()
-    {
-
-    }
-
-    friend void set_info(char a);
-    friend void set_next(Nod *n);
-    friend char get_info();
-    friend Nod get_next();
+    Nod(char i=0,   Nod *urm = NULL);
+    Nod(const Nod &n);
+    virtual ~Nod(){ }
+    friend void set_info(char a, Nod n);
+    friend void set_next(Nod *m , Nod n);
+    friend char get_info(Nod n);
+    friend Nod* get_next(Nod n);
     friend istream &operator>>(istream &i, Nod &n);
     friend ostream &operator<<(ostream &i, Nod &n);
     virtual void citire(istream &i, Nod &n);
@@ -94,38 +86,118 @@ public:
 
 class NodPrioritate :public Nod
 {
-
+    NodPrioritate *next;
     int priorit;
 public:
 
-    NodPrioritate():Nod()
-    {
-
-        this->priorit = 0;
-    }
-
-    NodPrioritate(char x, NodPrioritate *n, int p):Nod(x, n)
-    {
-
-        this->priorit=p;
-    }
-    NodPrioritate(const NodPrioritate &n):Nod(n)
-    {
-
-        priorit=n.priorit;
-        ///Nod(n);
-    }
-
+    NodPrioritate();
+    NodPrioritate(char x, NodPrioritate *n, int p);
+    NodPrioritate(const NodPrioritate &n);
     virtual ~NodPrioritate() { }
-
     friend istream &operator>>(istream &i, NodPrioritate &n);
     friend ostream &operator<<(ostream &i, NodPrioritate &n);
     NodPrioritate& operator=(const NodPrioritate &n );
     bool operator==(const NodPrioritate &n);
     void citire(istream &i, NodPrioritate &n);
     void afisare(ostream &i, NodPrioritate &n);
+    friend void set_info(char a, NodPrioritate n);
+    friend void set_next(NodPrioritate *m, NodPrioritate n);
+    friend char get_info(NodPrioritate n);
+    friend NodPrioritate* get_next(NodPrioritate n);
     friend class Priority_queue;
 };
+
+class Coada
+{
+protected:
+
+    Nod *prim;
+    Nod *ultim;
+    int dim_max;
+public:
+
+    Coada();  ///constructor fara parametrii
+    Coada(Nod vect[20], int d);  ///constructor cu parametrii
+    Coada(const Coada &c); ///copy constructor
+    virtual ~Coada()
+    {
+        delete[]this;
+    }
+
+    friend istream &operator>>(istream &i, Coada &c);
+    friend ostream &operator<<(ostream &i, Coada &c);
+    virtual void citire(istream &i, Coada &c);
+    virtual void afisare(ostream &i, Coada &c);
+    virtual void push(char x);
+    virtual void pop();
+    virtual Coada& operator=(const Coada &c );
+    virtual Coada& operator-(Coada &c);
+    virtual Coada& operator+(const Coada & c);
+};
+
+
+class DEQUE : public Coada
+{
+public:
+
+    DEQUE():Coada(){ }
+    DEQUE(Nod vect[20], int d):Coada(vect, d){ }
+    DEQUE(const DEQUE &c):Coada(c){ }
+    virtual ~DEQUE()
+    {
+        delete[]this;
+    }
+    friend istream &operator>>(istream &i, DEQUE &c);
+    friend ostream &operator<<(ostream &i, DEQUE &c);
+    void citire(istream &i, DEQUE &c);
+    void afisare(ostream &i, DEQUE &c);
+    void pop(int opt);
+    void push(int opt, char litera);
+    DEQUE& operator=(const DEQUE &d );
+    DEQUE& operator-(DEQUE &c);
+    DEQUE& operator+(const DEQUE & c);
+};
+
+class Priority_queue : public Coada
+{
+protected:
+    NodPrioritate *prim;///primp
+    NodPrioritate *ultim;///ultimp????? tb denumiri diferite??
+
+public:
+
+
+    Priority_queue(); ///constructor fara parametrii
+    Priority_queue(NodPrioritate vect[20], int d); ///constructor cu parametrii
+    Priority_queue(const Priority_queue &c); ///copy constructor
+    virtual ~Priority_queue()
+    {
+        delete[]this;
+    }
+
+    friend istream &operator>>(istream &i, Priority_queue &c);
+    friend ostream &operator<<(ostream &i, Priority_queue &c);
+    void citire(istream &i, Priority_queue &c);
+    void afisare(ostream &i, Priority_queue &c);
+    Priority_queue& operator-(Priority_queue &c);
+    Priority_queue& operator+(const Priority_queue & c);
+};
+
+
+
+///---------------------------------------------metode Nod:
+
+Nod::Nod(char i,   Nod *urm )
+    {
+        info=i;
+        next= urm;
+
+    }
+    Nod::Nod(const Nod &n)
+    {
+        info=n.info;
+        next=n.next;
+    }
 
 void Nod::afisare(ostream &i, Nod &n)
 {
@@ -149,11 +221,28 @@ ostream  &operator<<(ostream &i, Nod &n)
 }
 
 
-istream  &operator>>(istream &i, Nod &n) ///--------------------
+istream  &operator>>(istream &i, Nod &n)
 {
     n.citire(i, n);
 
 
+}
+///------------------------------------metode set get Nod
+void set_info(char a, Nod n)
+{
+    n.info=a;
+}
+void set_next(Nod *m, Nod n)
+{
+    n.next=m;
+}
+char get_info(Nod n)
+{
+    return n.info;
+}
+Nod* get_next(Nod n)
+{
+    return n.next;
 }
 
 bool Nod:: operator==(const Nod &n)
@@ -164,6 +253,23 @@ bool Nod:: operator==(const Nod &n)
         return 1;
 }
 
+
+///-----------------------------------------------------------------metode NodPrioritate
+
+NodPrioritate::NodPrioritate():Nod()
+    {
+        this->priorit = 0;
+    }
+
+NodPrioritate::NodPrioritate(char x, NodPrioritate *n, int p):Nod(x, n)
+    {
+        this->priorit=p;
+    }
+NodPrioritate:: NodPrioritate(const NodPrioritate &n):Nod(n)
+    {
+        priorit=n.priorit;
+        ///Nod(n);
+    }
 
 
 void NodPrioritate::citire(istream &i, NodPrioritate &n)
@@ -194,6 +300,33 @@ ostream &operator<<(ostream &i, NodPrioritate &n)
 
 }
 
+Nod& Nod:: operator=(const Nod &n )
+{
+    this->info=n.info;
+    this->next=n.next;
+
+}
+
+
+///----------------------------------------------metode set get NodPrioritate
+void set_info(char a, NodPrioritate n)
+{
+    n.info=a;
+}
+void set_next(NodPrioritate *m, NodPrioritate n)
+{
+    n.next=m;
+}
+char get_info(NodPrioritate n)
+{
+    return n.info;
+}
+NodPrioritate* get_next(NodPrioritate n)
+{
+    return n.next;
+}
+
+
 NodPrioritate& NodPrioritate:: operator=(const NodPrioritate &n )///const
 {
     *this=n;
@@ -211,15 +344,11 @@ bool NodPrioritate :: operator==(const NodPrioritate &n)///const
 
 
 }
-class Coada
-{protected:
 
-    Nod *prim;
-    Nod *ultim;
-    int dim_max;
-public:
+///-----------------------------------------------metode Coada
 
-    Coada()  ///constructor fara parametrii
+
+Coada::Coada()  ///constructor fara parametrii
     {
         prim=0;
         ultim=0;
@@ -227,7 +356,7 @@ public:
 
     }
 
-    Coada(Nod vect[20], int d)  ///constructor cu parametrii
+   Coada:: Coada(Nod vect[20], int d)  ///constructor cu parametrii
     {
         int i;
 
@@ -244,7 +373,7 @@ public:
         dim_max=d;
     }
 
-    Coada(const Coada &c) ///copy constructor
+    Coada::Coada(const Coada &c) ///copy constructor
     {
 
          Nod n, m;
@@ -262,152 +391,6 @@ public:
         dim_max=c.dim_max;
 
     }
-    ~Coada()
-    {
-        delete[]this;
-    }
-
-    friend istream &operator>>(istream &i, Coada &c);
-    friend ostream &operator<<(ostream &i, Coada &c);
-    virtual void citire(istream &i, Coada &c);
-    virtual void afisare(ostream &i, Coada &c);
-    virtual void push(char x)
-    {
-         Nod n;
-        n.info=x;
-        n.next=0;
-        *this->ultim->next=n;
-        delete(&n);
-    }
-
-    virtual void pop()
-    {
-        Nod p=*prim;
-        this->prim=p.next;
-        delete(&p);
-    }
-
-    virtual Coada& operator=(const Coada &c );
-    virtual Coada& operator-(Coada &c);
-    virtual Coada& operator+(const Coada & c);
-///push
-///pop
-///=
-///-
-
-
-
-};
-
-
-
-
-
-class DEQUE : public Coada
-{
-public:
-
-    DEQUE()
-    {
-        ///constructor fara parametrii
-        Coada();
-
-    }
-
-
-    DEQUE(Nod vect[20], int d):Coada(vect, d)
-    {
-        ///constructor cu parametrii
-        ///Coada.Coada(Nod vect[20], int d);
-
-    }
-
-
-
-    DEQUE(const DEQUE &c):Coada(c)
-    {
-
-
-    }
-
-    ~DEQUE()
-    {
-        delete[]this;
-    }
-    friend istream &operator>>(istream &i, DEQUE &c);
-    friend ostream &operator<<(ostream &i, DEQUE &c);
-    void citire(istream &i, DEQUE &c);
-    void afisare(ostream &i, DEQUE &c);
-    void pop(int opt);
-    void push(int opt, char litera);
-    DEQUE& operator=(const DEQUE &d );
-    DEQUE& operator-(DEQUE &c);
-    DEQUE& operator+(const DEQUE & c);
-};
-
-class Priority_queue : public Coada
-{
-public:
-
-
-    Priority_queue() ///constructor fara parametrii
-    {
-        prim=0;
-        ultim=0;
-        dim_max=0;
-        //this->prim->priorit=0;
-        //this->ultim->priorit=0;
-    }
-
-    Priority_queue(NodPrioritate vect[20], int d) ///constructor cu parametrii
-    {int i;
-         NodPrioritate n;
-        this->prim=&vect[0];
-        n=*prim;
-        for(i=1; i<sizeof(vect)-1; i++)
-        {
-            n.get_next()=vect[i];
-            n=n.get_next();
-
-
-        }
-
-        ultim=vect[i];
-        dim_max=d;
-
-    }
-    Priority_queue(const Priority_queue &c)///copy constructor
-    {
-
-         NodPrioritate n, m;
-        m=c.prim;
-        prim=c.prim;
-        n=prim;
-        for(while m.next)
-            {
-                n.next=m.next;
-                n=n.next;
-                m=m.next;
-            }
-
-///ultim=c.ultim;
-        dim_max=c.dim_max;
-
-    }
-
-    ~Priority_queue()
-    {
-        delete[]this;
-    }
-
-    friend istream &operator>>(istream &i, Priority_queue &c);
-    friend ostream &operator<<(ostream &i, Priority_queue &c);
-    void citire(istream &i, Priority_queue &c);
-    void afisare(ostream &i, Priority_queue &c);
-    Priority_queue& operator-(Priority_queue &c);
-    Priority_queue& operator+(const Priority_queue & c);
-};
-
 
 istream  &operator>>(istream &i, Coada &c)
 {
@@ -416,12 +399,12 @@ istream  &operator>>(istream &i, Coada &c)
 }
 void Coada::citire(istream &i, Coada &c)
 {
-    new Nod n;
+     Nod n;
     i>>dim_max;
     i>>n;
     for(int j=0; j<dim_max-2;j++)
     {
-        this->prim= n;
+        this->prim= &n;
         i>>n.next;
         n=n.next;
     }
@@ -439,7 +422,7 @@ void Coada:: afisare(ostream &i, Coada &c)
 
     i<<dim_max;
     i<<prim;
-    Nod n=prim;
+    Nod n=*prim;
     for(int j=0; j<dim_max;j++)
     {
         i<<n.next;
@@ -448,108 +431,21 @@ void Coada:: afisare(ostream &i, Coada &c)
 
 }
 
-
-Coada& Coada::  operator-(Coada &c)
-{
-     Nod n=this->prim, m=c.prim;
-    while(n==m)
+ void Coada::push(char x)
     {
-
-        n=n.next;
-        m=m.next;
-        this->pop();
-        c.pop();
+         Nod n;
+        n.info=x;
+        n.next=0;
+        *this->ultim->next=n;
         delete(&n);
-        delete(&m);
     }
-    return this;
 
-}
-Coada& Coada :: operator+(const Coada & c)
-{
-     Nod n=c.prim;
-     Coada e=this;
-    while(n!=null)
+     void Coada::pop()
     {
-        e.push(n);
-        n=n.next;
+        Nod p=*prim;
+        this->prim=p.next;
+        delete(&p);
     }
-    return e;
-}
-
-DEQUE& DEQUE::operator-(DEQUE &c)
-{
-    return this-c;
-}
-DEQUE& DEQUE::operator+(const DEQUE & c)
-{
-
-    return this+c;
-}
-
-Priority_queue& Priority_queue::operator-(Priority_queue &c)
-{
-    return this-c;
-
-}
-Priority_queue& Priority_queue::operator+(const Priority_queue & c)
-{
-
-    return this+c;
-}
-
-void Priority_queue:: pop()
-{
-     NodPrioritate n=this->prim;
-    int maxim=n.priorit;
-    while(n.next!=null)
-    {
-        n=n.next;
-        if(maxim<n.priorit)
-            maxim=n.priorit;
-    }
-    while(n.next!=null)
-    {
-        n=n.next;
-        if(n.next.priorit==maxim)
-        {
-            n.next=n.next.next;
-
-        }
-    }
-    delete(n);
-}
-void Priority_queue::  push(char litera, int p)
-{
-     NodPrioritate n(litera, p);
-    this->ultim.next=n;
-    this->ultim=n;
-    delete(n);
-}
-
-void Nod::set_info(char a)
-{
-    this->info=a;
-}
-void Nod::set_next(Nod *n)
-{
-    this->next=n;
-}
-char Nod::get_info()
-{
-    return this->info;
-}
-Nod* Nod::get_next()
-{
-    return this->next
-}
-
-Nod& Nod:: operator=(const Nod &n )
-{
-    this->info=n.info;
-    this->next=n.next;
-
-}
 
 Coada& Coada::operator=(const Coada &c )
 {
@@ -570,6 +466,45 @@ Coada& Coada::operator=(const Coada &c )
 }
 
 
+Coada& Coada::  operator-(Coada &c)
+{
+     Nod n=this->prim, m=c.prim;
+    while(n==m)
+    {
+
+        n=*n.next;
+        m=*m.next;
+        this->pop();
+        c.pop();
+        delete(&n);
+        delete(&m);
+    }
+    return this;
+
+}
+Coada& Coada :: operator+(const Coada & c)
+{
+     Nod n=*c.prim;
+     Coada e=this;
+    while(n!=null)
+    {
+        e.push(n);
+        n=n.next;
+    }
+    return e;
+}
+
+
+///-------------------------------------------------metode DEQUE
+DEQUE& DEQUE::operator-(DEQUE &c)
+{
+    return this-c;
+}
+DEQUE& DEQUE::operator+(const DEQUE & c)
+{
+
+    return this+c;
+}
 void DEQUE:: pop(int opt)
 {
 ///0-pop normal (front)
@@ -623,6 +558,95 @@ ostream DEQUE::&operator<<(ostream &i, DEQUE &c)
     i<<c;
 
 }
+
+///--------------------------------------------------metode Priority_queue
+
+
+   Priority_queue:: Priority_queue() ///constructor fara parametrii
+    {
+        prim=0;
+        ultim=0;
+        dim_max=0;
+        //this->prim->priorit=0;
+        //this->ultim->priorit=0;
+    }
+
+   Priority_queue:: Priority_queue(NodPrioritate vect[20], int d) ///constructor cu parametrii
+    {int i;
+         NodPrioritate n;
+        this->prim=&vect[0];
+        n=&prim;
+        for(i=1; i<sizeof(vect)-1; i++)
+        {
+            n->get_next()=vect[i];
+            n=n->get_next();
+
+
+        }
+
+        ultim=*vect[i];
+        dim_max=d;
+
+    }
+   Priority_queue:: Priority_queue(const Priority_queue &c)///copy constructor
+    {
+
+         NodPrioritate n, m;
+        m=c.prim;
+        prim=c.prim;
+        n=*prim;
+        while( m->get_next())
+            {
+                n->get_next()=m->get_next();
+                n=n.next;
+                m=m.next;
+            }
+
+///ultim=c.ultim;
+        dim_max=c.dim_max;
+
+    }
+
+Priority_queue& Priority_queue::operator-(Priority_queue &c)
+{
+    return this-c;
+
+}
+Priority_queue& Priority_queue::operator+(const Priority_queue & c)
+{
+
+    return this+c;
+}
+
+void Priority_queue:: pop()
+{
+     NodPrioritate n=this->prim;
+    int maxim=n.priorit;
+    while(n.next!=null)
+    {
+        n=n.next;
+        if(maxim<n.priorit)
+            maxim=n.priorit;
+    }
+    while(n.next!=null)
+    {
+        n=n.next;
+        if(n.next.priorit==maxim)
+        {
+            n.next=n.next.next;
+
+        }
+    }
+    delete(n);
+}
+void Priority_queue::  push(char litera, int p)
+{
+     NodPrioritate n(litera, p);
+    this->ultim.next=n;
+    this->ultim=n;
+    delete(n);
+}
+
 istream Priority_queue::&operator>>(istream &i, Priority_queue &c)
 {
 
@@ -637,8 +661,7 @@ ostream Priority_queue::&operator<<(ostream &i, Priority_queue &c)
 }
 
 
-
-
+///-----------------------------------------------------   MAIN
 
 int main()
 { Coada[10] ;
