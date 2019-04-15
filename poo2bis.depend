@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1555367277 source:d:\alice\scoala\poo\poo2bis\main.cpp
+	<iostream>
+	<fstream>
+	<stddef.h>
+
