@@ -322,7 +322,7 @@ void Coada::afisare(ostream &i)
 	i << prim->get_info();
 	i<<" ";
 	Nod n = *prim;
-	for (int j = 0; j<dim_max; j++)
+	for (int j = 0; j<dim; j++)
 	{
 		n = *n.get_next();
 		i << n.get_info();
@@ -464,10 +464,18 @@ void DEQUE ::push(int opt, Nod p)
     ///0-stg, 1-dr
     if(opt==0)
     {
-         Nod n=*this->prim;
+        if(prim==NULL)
+        {
+            prim=&p;
+        }
+        else{
+
+            Nod n=*this->prim;
 
         this->prim=&p;
         p.set_next(&n);
+        }
+
     }
     else
         Coada::push(&p);
@@ -770,13 +778,30 @@ Priority_queue:: Priority_queue() ///constructor fara parametri
 
 Priority_queue& Priority_queue::operator-(Priority_queue &c)
 {
-//    return this-c;
+    NodPrioritate n = *this->prim, m = *c.prim;
+	while (n == m)
+	{
+
+		n = *n.get_next();
+		m = *m.get_next();
+		this->pop();
+		c.pop();
+
+	}
+	return *this;
+
 
 }
 Priority_queue& Priority_queue::operator+(const Priority_queue & c)
-{
+{NodPrioritate n = *c.prim;
+	Priority_queue e = *this;
+	while (n.get_next() !=NULL)
+	{
+		e.push( n);
+		n = *n.get_next();
+	}
+	return e;
 
-   // return this+c;
 }
 
 void Priority_queue:: pop()
@@ -859,14 +884,25 @@ ostream &operator<<(ostream &i, Priority_queue &c)
 ///------------------------------------------------------------------------
 int main()
 {
-	Coada C;
-	Nod a, b, c;
-	cin >> a >> b >> c;
-	cout << a << b << c;
-	//C.push(&a);
-	//C.push(&b);
-	///C.afisare(cout);
-	cin>>C;
-	cout<<C;
+	Coada C1, C2;
+	Nod x, y;
+	Nod z;
+	cin >> x >> y >> z;
+	cout << x << y << z;
+
+	C1.push(&x);
+	C1.push(&y);
+
+	DEQUE d;
+	d.push(0, x);
+	d.push(1, y);
+
+	///cin>>C1;
+	cout<<d;
+	//cout<<C1;
+
+	//cout<<"\n";
+	//cout<<" C2: ";
+	//cout<<C2;
 }
 
